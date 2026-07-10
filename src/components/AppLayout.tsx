@@ -7,6 +7,7 @@ import {
   PieChartOutlined,
   AppstoreOutlined,
   SettingOutlined,
+  RocketOutlined,
 } from '@ant-design/icons'
 
 const { Sider, Content, Header } = Layout
@@ -17,6 +18,7 @@ const menuItems = [
   { key: '/records', icon: <UnorderedListOutlined />, label: '账单列表' },
   { key: '/statistics', icon: <PieChartOutlined />, label: '月度统计' },
   { key: '/categories', icon: <AppstoreOutlined />, label: '分类管理' },
+  { key: '/game', icon: <RocketOutlined />, label: '奶龙大战' },
   { key: '/settings', icon: <SettingOutlined />, label: '系统设置' },
 ]
 
