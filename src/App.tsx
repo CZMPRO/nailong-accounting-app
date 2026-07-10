@@ -8,6 +8,7 @@ import RecordList from './pages/RecordList'
 import Statistics from './pages/Statistics'
 import Categories from './pages/Categories'
 import Settings from './pages/Settings'
+import TankGame from './pages/TankGame'
 
 // 根组件 — 配置中文语言包、路由和整体布局
 const App: React.FC = () => {
@@ -84,6 +85,7 @@ const App: React.FC = () => {
             <Route path="/statistics" element={<Statistics />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/game" element={<TankGame />} />
             {/* 默认跳转到记一笔页面 */}
             <Route path="*" element={<Navigate to="/add" replace />} />
           </Routes>
