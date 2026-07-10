@@ -48,6 +48,11 @@ export function saveDatabase() {
   }
 }
 
+// 恢复数据库到出厂默认设置
+export function resetDatabaseToDefault() {
+  seedDefaultData()
+}
+
 // 初始化数据库 — 如果文件不存在，则创建并预置默认分类数据；若存在，自动检查平滑升级
 export function initDatabase(userDataPath: string) {
   dbFilePath = path.join(userDataPath, 'bookkeeping_data.json')

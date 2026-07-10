@@ -88,6 +88,10 @@ declare global {
       }) => Promise<any>
       deleteRecord: (id: number) => Promise<any>
       getMonthlyStats: (year: number, month: number) => Promise<MonthlyStats>
+      exportToCsv: () => Promise<{ success: boolean; message: string }>
+      importFromCsv: () => Promise<{ success: boolean; message: string }>
+      clearAllRecords: () => Promise<{ success: boolean; message: string }>
+      factoryResetDb: () => Promise<{ success: boolean; message: string }>
     }
   }
 }

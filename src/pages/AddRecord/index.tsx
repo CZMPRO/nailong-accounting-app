@@ -9,6 +9,7 @@ import {
   message,
   Cascader,
   Segmented,
+  Space,
 } from 'antd'
 import dayjs from 'dayjs'
 import type { CategoryWithChildren } from '../../types'
@@ -21,6 +22,8 @@ const AddRecord: React.FC = () => {
 
   // 监听当前记账类型：'expense' 支出，'income' 收入
   const [recordType, setRecordType] = useState<'expense' | 'income'>('expense')
+  // 同步金额状态，用于数码计算屏幕显示
+  const [amountValue, setAmountValue] = useState<number | null>(null)
 
   // 页面加载时获取分类数据
   useEffect(() => {
@@ -41,6 +44,26 @@ const AddRecord: React.FC = () => {
     const type = value as 'expense' | 'income'
     setRecordType(type)
     form.setFieldsValue({ category: undefined })
+  }
+
+  // 修改金额时同步显示
+  const handleAmountChange = (value: number | null) => {
+    setAmountValue(value)
+  }
+
+  // 快捷金额追加
+  const handleQuickAdd = (value: number) => {
+    const current = form.getFieldValue('amount') || 0
+    // 保留两位小数
+    const nextAmount = parseFloat((current + value).toFixed(2))
+    form.setFieldsValue({ amount: nextAmount })
+    setAmountValue(nextAmount)
+  }
+
+  // 重置金额
+  const handleClearAmount = () => {
+    form.setFieldsValue({ amount: undefined })
+    setAmountValue(null)
   }
 
   // 根据当前选择的类型，过滤并转换出对应的级联分类数据
@@ -70,6 +93,7 @@ const AddRecord: React.FC = () => {
       })
       message.success('记账成功！💰')
       form.resetFields()
+      setAmountValue(null)
       // 重置后恢复默认日期为今天，并保持当前的支出/收入类型
       form.setFieldsValue({
         date: dayjs(),
@@ -85,9 +109,32 @@ const AddRecord: React.FC = () => {
   return (
     <div style={{ maxWidth: 500, margin: '0 auto' }}>
       <Card
-        title="✏️ 记一笔"
-        style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+        title={
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span>✏️</span>
+            <span>记一笔账单</span>
+          </span>
+        }
+        className="nailong-card"
+        style={{ borderRadius: 16 }}
       >
+        {/* 精致的模拟显示屏 */}
+        <div className="nailong-display-screen">
+          <div style={{ fontSize: 13, color: '#ff9829', marginBottom: 4, fontWeight: 500 }}>
+            {recordType === 'expense' ? '🔴 当前记支出金额' : '🟢 当前记收入金额'}
+          </div>
+          <div
+            style={{
+              fontSize: 32,
+              fontWeight: 800,
+              fontFamily: 'Courier New, monospace',
+              color: recordType === 'expense' ? '#ff6270' : '#6ed13d',
+            }}
+          >
+            ¥ {amountValue !== null ? amountValue.toFixed(2) : '0.00'}
+          </div>
+        </div>
+
         <Form
           form={form}
           layout="vertical"
@@ -98,7 +145,7 @@ const AddRecord: React.FC = () => {
           }}
         >
           {/* 支出/收入类型切换 */}
-          <Form.Item label="账单类型" style={{ marginBottom: 20 }}>
+          <Form.Item label={<span style={{ fontWeight: 600 }}>账单类型</span>} style={{ marginBottom: 20 }}>
             <Segmented
               options={[
                 { label: '🔴 记支出', value: 'expense' },
@@ -108,12 +155,13 @@ const AddRecord: React.FC = () => {
               onChange={handleTypeChange}
               block
               size="large"
+              style={{ borderRadius: 12 }}
             />
           </Form.Item>
 
           {/* 金额输入 */}
           <Form.Item
-            label="金额（元）"
+            label={<span style={{ fontWeight: 600 }}>金额（元）</span>}
             name="amount"
             rules={[
               { required: true, message: '请输入金额' },
@@ -123,37 +171,55 @@ const AddRecord: React.FC = () => {
                 message: '金额必须大于0',
               },
             ]}
+            style={{ marginBottom: 12 }}
           >
             <InputNumber
-              style={{ width: '100%' }}
-              prefix="¥"
+              style={{ width: '100%', borderRadius: 12 }}
+              prefix={<span style={{ color: '#ff9829', fontWeight: 'bold' }}>¥</span>}
               placeholder={recordType === 'expense' ? '请输入支出金额' : '请输入收入金额'}
               precision={2}
               size="large"
               min={0.01}
               max={9999999.99}
+              onChange={handleAmountChange}
             />
           </Form.Item>
 
-          {/* 分类选择（级联：先选大类，再选小类） */}
+          {/* 快捷输入面板 */}
+          <div style={{ marginBottom: 24 }}>
+            <Space wrap size={8}>
+              <Button size="small" className="quick-amount-btn" onClick={() => handleQuickAdd(10)}>+10</Button>
+              <Button size="small" className="quick-amount-btn" onClick={() => handleQuickAdd(20)}>+20</Button>
+              <Button size="small" className="quick-amount-btn" onClick={() => handleQuickAdd(50)}>+50</Button>
+              <Button size="small" className="quick-amount-btn" onClick={() => handleQuickAdd(100)}>+100</Button>
+              <Button size="small" className="quick-amount-btn" onClick={() => handleQuickAdd(200)}>+200</Button>
+              <Button size="small" className="quick-amount-btn" onClick={() => handleQuickAdd(500)}>+500</Button>
+              <Button size="small" danger type="dashed" style={{ borderRadius: 20 }} onClick={handleClearAmount}>清空</Button>
+            </Space>
+          </div>
+
+          {/* 分类选择 */}
           <Form.Item
-            label="分类"
+            label={<span style={{ fontWeight: 600 }}>分类</span>}
             name="category"
             rules={[{ required: true, message: '请选择分类' }]}
+            style={{ marginBottom: 20 }}
           >
             <Cascader
               options={cascaderOptions}
               placeholder="先选大类，再选小类"
               size="large"
               expandTrigger="hover"
+              style={{ width: '100%' }}
             />
           </Form.Item>
 
           {/* 日期选择 */}
           <Form.Item
-            label="日期"
+            label={<span style={{ fontWeight: 600 }}>日期</span>}
             name="date"
             rules={[{ required: true, message: '请选择日期' }]}
+            style={{ marginBottom: 20 }}
           >
             <DatePicker
               style={{ width: '100%' }}
@@ -164,17 +230,18 @@ const AddRecord: React.FC = () => {
           </Form.Item>
 
           {/* 备注输入（可选） */}
-          <Form.Item label="备注" name="note">
+          <Form.Item label={<span style={{ fontWeight: 600 }}>备注</span>} name="note" style={{ marginBottom: 24 }}>
             <Input.TextArea
               placeholder={recordType === 'expense' ? '可以记录消费详情，如：晚餐聚餐' : '可以记录收入来源，如：7月份基本工资'}
               rows={3}
               maxLength={200}
               showCount
+              style={{ borderRadius: 12 }}
             />
           </Form.Item>
 
           {/* 提交按钮 */}
-          <Form.Item>
+          <Form.Item style={{ marginBottom: 0 }}>
             <Button
               type="primary"
               htmlType="submit"
@@ -184,8 +251,9 @@ const AddRecord: React.FC = () => {
               style={{
                 height: 48,
                 fontSize: 16,
-                background: recordType === 'income' ? '#52c41a' : '#ff7a45',
-                borderColor: recordType === 'income' ? '#52c41a' : '#ff7a45',
+                fontWeight: 700,
+                background: recordType === 'income' ? '#6ed13d' : '#ff9829',
+                borderColor: recordType === 'income' ? '#6ed13d' : '#ff9829',
               }}
             >
               💾 保存

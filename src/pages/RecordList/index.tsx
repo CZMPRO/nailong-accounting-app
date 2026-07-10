@@ -18,7 +18,7 @@ import {
   Col,
   Statistic,
 } from 'antd'
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
+import { DeleteOutlined, EditOutlined, ArrowUpOutlined, ArrowDownOutlined, AccountBookOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import type { Record as ExpenseRecord, CategoryWithChildren } from '../../types'
 
@@ -151,17 +151,28 @@ const RecordList: React.FC = () => {
       title: '日期',
       dataIndex: 'date',
       key: 'date',
-      width: 110,
+      width: 120,
+      render: (date: string) => (
+        <span style={{ fontWeight: 500, color: '#604c46' }}>{date}</span>
+      ),
     },
     {
-      title: '收支类型',
+      title: '类型',
       dataIndex: 'type',
       key: 'type',
       width: 90,
       render: (type: 'expense' | 'income') => {
         const isIncome = type === 'income'
         return (
-          <Tag color={isIncome ? 'success' : 'error'}>
+          <Tag
+            color={isIncome ? 'success' : 'error'}
+            style={{
+              borderRadius: 20,
+              padding: '2px 10px',
+              fontWeight: 600,
+              border: isIncome ? '1px solid #d9f7be' : '1px solid #fff0f6',
+            }}
+          >
             {isIncome ? '收入' : '支出'}
           </Tag>
         )
@@ -170,14 +181,38 @@ const RecordList: React.FC = () => {
     {
       title: '分类',
       key: 'category',
-      width: 180,
+      width: 200,
       render: (_: any, record: ExpenseRecord) => {
         const isIncome = record.type === 'income'
         return (
           <Space>
-            <span>{record.category_icon}</span>
-            <span>{record.category_name}</span>
-            <Tag color={isIncome ? 'green' : 'orange'}>{record.subcategory_name}</Tag>
+            {/* 拟物化 Emoji 圆形彩章底色 */}
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                background: isIncome ? '#f6ffed' : '#fff2e8',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 16,
+                border: isIncome ? '1px solid #d9f7be' : '1px solid #ffd8bf',
+              }}
+            >
+              {record.category_icon || '🦖'}
+            </div>
+            <span style={{ fontWeight: 600, color: '#4a362f' }}>{record.category_name}</span>
+            <Tag
+              color={isIncome ? 'green' : 'orange'}
+              style={{
+                borderRadius: 4,
+                fontWeight: 'normal',
+                fontSize: 11,
+              }}
+            >
+              {record.subcategory_name}
+            </Tag>
           </Space>
         )
       },
@@ -186,16 +221,17 @@ const RecordList: React.FC = () => {
       title: '金额',
       dataIndex: 'amount',
       key: 'amount',
-      width: 120,
+      width: 140,
       align: 'right' as const,
       render: (amount: number, record: ExpenseRecord) => {
         const isIncome = record.type === 'income'
         return (
           <span
             style={{
-              color: isIncome ? '#52c41a' : '#ff4d4f',
-              fontWeight: 'bold',
-              fontSize: 15,
+              color: isIncome ? '#6ed13d' : '#ff6270',
+              fontWeight: 800,
+              fontSize: 16,
+              fontFamily: 'Courier New, monospace',
             }}
           >
             {isIncome ? '+' : '-'}¥{amount.toFixed(2)}
@@ -204,23 +240,25 @@ const RecordList: React.FC = () => {
       },
     },
     {
-      title: '备注',
+      title: '备注说明',
       dataIndex: 'note',
       key: 'note',
       ellipsis: true,
-      render: (note: string) => note || <span style={{ color: '#ccc' }}>无</span>,
+      render: (note: string) => note || <span style={{ color: '#ccc', fontStyle: 'italic' }}>暂无备注</span>,
     },
     {
       title: '操作',
       key: 'action',
-      width: 120,
+      width: 160,
+      align: 'center' as const,
       render: (_: any, record: ExpenseRecord) => (
-        <Space>
+        <Space size={4}>
           <Button
             type="link"
             icon={<EditOutlined />}
             size="small"
             onClick={() => handleEdit(record)}
+            style={{ color: '#ff9829', fontWeight: 500 }}
           >
             编辑
           </Button>
@@ -230,9 +268,10 @@ const RecordList: React.FC = () => {
             onConfirm={() => handleDelete(record.id)}
             okText="确定"
             cancelText="取消"
-            okButtonProps={{ danger: true }}
+            okButtonProps={{ danger: true, style: { borderRadius: 12 } }}
+            cancelButtonProps={{ style: { borderRadius: 12 } }}
           >
-            <Button type="link" danger icon={<DeleteOutlined />} size="small">
+            <Button type="link" danger icon={<DeleteOutlined />} size="small" style={{ fontWeight: 500 }}>
               删除
             </Button>
           </Popconfirm>
@@ -243,57 +282,121 @@ const RecordList: React.FC = () => {
 
   return (
     <div>
-      {/* 顶部筛选和统计面板 */}
-      <Card style={{ marginBottom: 16, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-        <Row gutter={24} align="middle">
-          <Col span={6}>
-            <Space direction="vertical" size={4}>
-              <span style={{ color: '#888', fontSize: 13 }}>选择查询月份</span>
+      {/* 顶部筛选和统计面板 — 重构为彩色轻黏土质感小卡片 */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+        {/* 日期选择 */}
+        <Col xs={24} md={6}>
+          <Card
+            className="nailong-card"
+            style={{
+              height: '100%',
+              borderRadius: 16,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+            }}
+          >
+            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              <span style={{ color: '#88746a', fontSize: 13, fontWeight: 600 }}>选择查询月份</span>
               <DatePicker
                 picker="month"
                 value={selectedMonth}
                 onChange={(date) => date && setSelectedMonth(date)}
                 allowClear={false}
                 format="YYYY年MM月"
-                style={{ width: '100%' }}
+                style={{ width: '100%', borderRadius: 12 }}
               />
             </Space>
-          </Col>
-          <Col span={6} style={{ borderLeft: '1px solid #f0f0f0' }}>
+          </Card>
+        </Col>
+
+        {/* 收入绿卡 */}
+        <Col xs={12} md={6}>
+          <Card
+            className="nailong-card"
+            style={{
+              borderRadius: 16,
+              background: 'linear-gradient(135deg, #ffffff, #f6ffed)',
+              borderColor: '#d9f7be',
+            }}
+          >
             <Statistic
-              title="本月总收入"
+              title={
+                <span style={{ color: '#52c41a', fontWeight: 600 }}>
+                  <ArrowUpOutlined /> 本月总收入
+                </span>
+              }
               value={totalIncome}
               precision={2}
               prefix="+"
-              valueStyle={{ color: '#52c41a', fontWeight: 'bold' }}
+              valueStyle={{ color: '#6ed13d', fontWeight: 800, fontFamily: 'Courier New, monospace' }}
             />
-          </Col>
-          <Col span={6} style={{ borderLeft: '1px solid #f0f0f0' }}>
+          </Card>
+        </Col>
+
+        {/* 支出红卡 */}
+        <Col xs={12} md={6}>
+          <Card
+            className="nailong-card"
+            style={{
+              borderRadius: 16,
+              background: 'linear-gradient(135deg, #ffffff, #fff0f6)',
+              borderColor: '#ffadd2',
+            }}
+          >
             <Statistic
-              title="本月总支出"
+              title={
+                <span style={{ color: '#ff4d4f', fontWeight: 600 }}>
+                  <ArrowDownOutlined /> 本月总支出
+                </span>
+              }
               value={totalExpense}
               precision={2}
               prefix="-"
-              valueStyle={{ color: '#ff4d4f', fontWeight: 'bold' }}
+              valueStyle={{ color: '#ff6270', fontWeight: 800, fontFamily: 'Courier New, monospace' }}
             />
-          </Col>
-          <Col span={6} style={{ borderLeft: '1px solid #f0f0f0' }}>
+          </Card>
+        </Col>
+
+        {/* 结余黄卡 */}
+        <Col xs={24} md={6}>
+          <Card
+            className="nailong-card"
+            style={{
+              borderRadius: 16,
+              background: 'linear-gradient(135deg, #ffffff, #fff7e6)',
+              borderColor: '#ffd591',
+            }}
+          >
             <Statistic
-              title="本月结余"
+              title={
+                <span style={{ color: '#ff9829', fontWeight: 600 }}>
+                  <AccountBookOutlined /> 本月结余
+                </span>
+              }
               value={Math.abs(balance)}
               precision={2}
               prefix={balance >= 0 ? '¥' : '-¥'}
               valueStyle={{
-                color: balance >= 0 ? '#ff7a45' : '#8c8c8c',
-                fontWeight: 'bold',
+                color: balance >= 0 ? '#ff9829' : '#88746a',
+                fontWeight: 800,
+                fontFamily: 'Courier New, monospace',
               }}
             />
-          </Col>
-        </Row>
-      </Card>
+          </Card>
+        </Col>
+      </Row>
 
       {/* 记录表格 */}
-      <Card style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+      <Card
+        title={
+          <span style={{ fontWeight: 700, color: '#4a362f' }}>
+            📁 账单明细列表
+          </span>
+        }
+        className="nailong-card"
+        style={{ borderRadius: 16 }}
+      >
         <Table
           columns={columns}
           dataSource={records}
@@ -301,41 +404,52 @@ const RecordList: React.FC = () => {
           loading={loading}
           pagination={{
             pageSize: 15,
-            showTotal: (total) => `共 ${total} 条记录`,
+            showTotal: (total) => `共 ${total} 条明细`,
           }}
-          locale={{ emptyText: '这个月还没有记录哦 🐲' }}
+          locale={{ emptyText: '这个月还没有记录明细哦 🐲' }}
+          style={{ borderRadius: 12, overflow: 'hidden' }}
         />
       </Card>
 
       {/* 编辑弹窗 */}
       <Modal
-        title="✏️ 编辑记录"
+        title={
+          <span style={{ fontWeight: 700, color: '#4a362f' }}>
+            ✏️ 修改账单记录
+          </span>
+        }
         open={editModalOpen}
         onCancel={() => setEditModalOpen(false)}
         footer={null}
         destroyOnClose
+        styles={{
+          body: {
+            paddingTop: 12,
+          }
+        }}
       >
-        <Form form={editForm} layout="vertical" onFinish={handleEditSave} style={{ marginTop: 15 }}>
+        <Form form={editForm} layout="vertical" onFinish={handleEditSave}>
           {/* 类型切换 */}
-          <Form.Item label="账单类型" name="type">
+          <Form.Item label={<span style={{ fontWeight: 600 }}>账单类型</span>} name="type">
             <Segmented
               options={[
-                { label: '🔴 支出', value: 'expense' },
-                { label: '🟢 收入', value: 'income' },
+                { label: '支出', value: 'expense' },
+                { label: '收入', value: 'income' },
               ]}
               value={editRecordType}
               onChange={handleEditTypeChange}
               block
+              style={{ borderRadius: 12 }}
             />
           </Form.Item>
 
           <Form.Item
-            label="金额（元）"
+            label={<span style={{ fontWeight: 600 }}>金额（元）</span>}
             name="amount"
             rules={[{ required: true, message: '请输入金额' }]}
           >
             <InputNumber
-              style={{ width: '100%' }}
+              style={{ width: '100%', borderRadius: 12 }}
               prefix="¥"
               precision={2}
               min={0.01}
@@ -344,29 +458,29 @@ const RecordList: React.FC = () => {
           </Form.Item>
 
           <Form.Item
-            label="分类"
+            label={<span style={{ fontWeight: 600 }}>分类</span>}
             name="category"
             rules={[{ required: true, message: '请选择分类' }]}
           >
-            <Cascader options={cascaderOptions} expandTrigger="hover" />
+            <Cascader options={cascaderOptions} expandTrigger="hover" style={{ borderRadius: 12 }} />
           </Form.Item>
 
           <Form.Item
-            label="日期"
+            label={<span style={{ fontWeight: 600 }}>日期</span>}
             name="date"
             rules={[{ required: true, message: '请选择日期' }]}
           >
             <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" allowClear={false} />
           </Form.Item>
 
-          <Form.Item label="备注" name="note">
-            <Input.TextArea rows={3} maxLength={200} showCount />
+          <Form.Item label={<span style={{ fontWeight: 600 }}>备注说明</span>} name="note">
+            <Input.TextArea rows={3} maxLength={200} showCount style={{ borderRadius: 12 }} />
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
             <Space>
-              <Button onClick={() => setEditModalOpen(false)}>取消</Button>
-              <Button type="primary" htmlType="submit">
+              <Button onClick={() => setEditModalOpen(false)} style={{ borderRadius: 12 }}>取消</Button>
+              <Button type="primary" htmlType="submit" style={{ borderRadius: 12, fontWeight: 600 }}>
                 保存修改
               </Button>
             </Space>

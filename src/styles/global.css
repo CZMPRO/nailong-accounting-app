@@ -1,4 +1,4 @@
-/* 全局样式 — 奶龙记账 */
+/* 全局样式 - 奶龙记账 */
 
 /* 重置默认样式 */
 * {
@@ -11,9 +11,9 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial,
     sans-serif;
-  background-color: #f5f5f5;
-  color: #333;
-  overflow: hidden; /* 防止整体滚动 */
+  background-color: #fdf9f4; /* 温暖淡奶黄/香草奶油底色 */
+  color: #4a362f; /* 暖可可棕色 */
+  overflow: hidden; /* 防止整体窗口滚动 */
 }
 
 #root {
@@ -23,6 +23,7 @@ body {
 /* 滚动条美化 */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -30,10 +31,117 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d9d9d9;
+  background: #ffd6b3; /* 奶橘色滑块 */
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #bfbfbf;
+  background: #ffb880;
+}
+
+/* 关键帧动画 */
+
+/* 奶龙可爱摆尾/摇摆动画 */
+@keyframes nailongWiggle {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(3deg); }
+  50% { transform: rotate(0deg); }
+  75% { transform: rotate(-3deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* 悬浮漂浮动画 */
+@keyframes nailongFloat {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0px); }
+}
+
+/* 页面淡入过渡 */
+@keyframes nailongFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 动画工具类 */
+.animate-wiggle:hover {
+  animation: nailongWiggle 0.5s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: nailongFloat 3s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: nailongFadeIn 0.4s ease-out forwards;
+}
+
+/* 奶龙精致卡片与微交互样式 */
+.nailong-card {
+  border: 1.5px solid #ffe8cc !important;
+  box-shadow: 0 4px 12px rgba(255, 152, 41, 0.04) !important;
+  transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) !important;
+  background: #ffffff !important;
+}
+
+.nailong-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 152, 41, 0.08) !important;
+  border-color: #ffb880 !important;
+}
+
+/* 快捷金额按钮交互 */
+.quick-amount-btn {
+  border-color: #ffe8cc !important;
+  color: #4a362f !important;
+  background: #fffdfb !important;
+  transition: all 0.2s ease !important;
+}
+
+.quick-amount-btn:hover {
+  background: #fff7ee !important;
+  border-color: #ff9829 !important;
+  color: #ff9829 !important;
+  transform: scale(1.05);
+}
+
+.quick-amount-btn:active {
+  transform: scale(0.95);
+}
+
+/* 数码显示屏样式 */
+.nailong-display-screen {
+  background: #fffcf0;
+  border: 2px dashed #ffe8cc;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: right;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.nailong-display-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    #ff9829,
+    #ff9829 10px,
+    #6ed13d 10px,
+    #6ed13d 20px,
+    #ff6270 20px,
+    #ff6270 30px
+  );
+  opacity: 0.6;
 }

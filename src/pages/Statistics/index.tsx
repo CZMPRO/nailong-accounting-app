@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Card, DatePicker, Statistic, Row, Col, List, Avatar, Empty, Spin, Segmented, Space } from 'antd'
+import { Card, DatePicker, Statistic, Row, Col, List, Avatar, Empty, Spin, Segmented, Space, Progress } from 'antd'
 import {
   PieChart,
   Pie,
@@ -15,12 +15,20 @@ import {
 } from 'recharts'
 import dayjs, { Dayjs } from 'dayjs'
 import type { MonthlyStats } from '../../types'
+import { ArrowUpOutlined, ArrowDownOutlined, AccountBookOutlined } from '@ant-design/icons'
 
-// 饼图颜色调色板
+// 精致温馨马卡龙调色板
 const PIE_COLORS = [
-  '#ff7a45', '#ffa940', '#ffc53d', '#73d13d', '#36cfc9',
-  '#40a9ff', '#9254de', '#f759ab', '#ff4d4f', '#faad14',
-  '#52c41a', '#13c2c2', '#597ef7',
+  '#ff9829', // 暖桔
+  '#6ed13d', // 嫩绿
+  '#ff6270', // 莓粉
+  '#ffcd29', // 柠檬黄
+  '#4fc3f7', // 浅蓝
+  '#ba68c8', // 紫罗兰
+  '#a1887f', // 暖沙
+  '#4db6ac', // 薄荷绿
+  '#ff8a65', // 珊瑚色
+  '#90a4ae', // 蓝灰
 ]
 
 const Statistics: React.FC = () => {
@@ -70,14 +78,38 @@ const Statistics: React.FC = () => {
 
   const balance = (stats?.monthIncome ?? 0) - (stats?.monthExpense ?? 0)
 
+  // 自定义环形图中心标签
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: any) => {
+    const RADIAN = Math.PI / 180
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+    const x = cx + radius * Math.cos(-midAngle * RADIAN)
+    const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+    // 如果占比小于 5%，不渲染字样，避免拥挤
+    if (percent < 0.05) return null
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="#ffffff"
+        textAnchor="middle"
+        dominantBaseline="central"
+        style={{ fontSize: 11, fontWeight: 700 }}
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    )
+  }
+
   // 自定义双柱状图 Tooltip
   const CustomBarTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div style={{ background: '#fff', border: '1px solid #f0f0f0', padding: '8px 12px', borderRadius: 8 }}>
-          <p style={{ margin: '0 0 4px', color: '#666', fontWeight: 500 }}>{label}</p>
+        <div style={{ background: '#ffffff', border: '2px solid #ffe8cc', padding: '8px 12px', borderRadius: 12, boxShadow: '0 4px 12px rgba(255,152,41,0.04)' }}>
+          <p style={{ margin: '0 0 6px', color: '#4a362f', fontWeight: 700 }}>{label}</p>
           {payload.map((item: any, idx: number) => (
-            <p key={idx} style={{ margin: 0, color: item.color }}>
+            <p key={idx} style={{ margin: 0, color: item.color, fontSize: 13, fontWeight: 600 }}>
               {item.name}: ¥{Number(item.value).toFixed(2)}
             </p>
           ))}
@@ -87,110 +119,240 @@ const Statistics: React.FC = () => {
     return null
   }
 
+  // 自定义环形图 Tooltip
+  const CustomPieTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0]
+      return (
+        <div style={{ background: '#ffffff', border: '2px solid #ffe8cc', padding: '8px 12px', borderRadius: 12, boxShadow: '0 4px 12px rgba(255,152,41,0.04)' }}>
+          <p style={{ margin: 0, color: '#4a362f', fontWeight: 700, fontSize: 13 }}>
+            {data.name}: ¥{Number(data.value).toFixed(2)}
+          </p>
+        </div>
+      )
+    }
+    return null
+  }
+
+  // 获取前三名排行榜奖牌或数字
+  const getRankBadge = (index: number) => {
+    const badges = [
+      { bg: 'linear-gradient(135deg, #ffd700, #ffa500)', text: '🥇' },
+      { bg: 'linear-gradient(135deg, #c0c0c0, #808080)', text: '🥈' },
+      { bg: 'linear-gradient(135deg, #cd7f32, #8b4513)', text: '🥉' }
+    ]
+    if (index < 3) {
+      return (
+        <Avatar
+          style={{
+            background: badges[index].bg,
+            color: '#fff',
+            fontWeight: 'bold',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+            fontSize: 16,
+          }}
+        >
+          {badges[index].text}
+        </Avatar>
+      )
+    }
+    return (
+      <Avatar
+        style={{
+          background: '#ebdcd3',
+          color: '#4a362f',
+          fontWeight: 700,
+        }}
+      >
+        {index + 1}
+      </Avatar>
+    )
+  }
+
   return (
     <div>
       {/* 顶部统计总览面板 */}
-      <Card style={{ marginBottom: 16, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-        <Row gutter={24} align="middle">
-          <Col span={6}>
-            <Space direction="vertical" size={4}>
-              <span style={{ color: '#888', fontSize: 13 }}>选择统计月份</span>
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+        {/* 日期选择 */}
+        <Col xs={24} md={6}>
+          <Card
+            className="nailong-card"
+            style={{
+              height: '100%',
+              borderRadius: 16,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+            }}
+          >
+            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              <span style={{ color: '#88746a', fontSize: 13, fontWeight: 600 }}>选择统计月份</span>
               <DatePicker
                 picker="month"
                 value={selectedMonth}
                 onChange={(val) => val && setSelectedMonth(val)}
                 allowClear={false}
                 format="YYYY年MM月"
-                style={{ width: '100%' }}
+                style={{ width: '100%', borderRadius: 12 }}
               />
             </Space>
-          </Col>
-          <Col span={6} style={{ borderLeft: '1px solid #f0f0f0' }}>
+          </Card>
+        </Col>
+
+        {/* 本月收入 */}
+        <Col xs={12} md={6}>
+          <Card
+            className="nailong-card"
+            style={{
+              borderRadius: 16,
+              background: 'linear-gradient(135deg, #ffffff, #f6ffed)',
+              borderColor: '#d9f7be',
+            }}
+          >
             <Statistic
-              title="本月总收入"
+              title={
+                <span style={{ color: '#52c41a', fontWeight: 600 }}>
+                  <ArrowUpOutlined /> 本月总收入
+                </span>
+              }
               value={stats?.monthIncome ?? 0}
               precision={2}
               prefix="¥"
-              valueStyle={{ color: '#52c41a', fontWeight: 'bold' }}
+              valueStyle={{ color: '#6ed13d', fontWeight: 800, fontFamily: 'Courier New, monospace' }}
               loading={loading}
             />
-          </Col>
-          <Col span={6} style={{ borderLeft: '1px solid #f0f0f0' }}>
+          </Card>
+        </Col>
+
+        {/* 本月支出 */}
+        <Col xs={12} md={6}>
+          <Card
+            className="nailong-card"
+            style={{
+              borderRadius: 16,
+              background: 'linear-gradient(135deg, #ffffff, #fff0f6)',
+              borderColor: '#ffadd2',
+            }}
+          >
             <Statistic
-              title="本月总支出"
+              title={
+                <span style={{ color: '#ff4d4f', fontWeight: 600 }}>
+                  <ArrowDownOutlined /> 本月总支出
+                </span>
+              }
               value={stats?.monthExpense ?? 0}
               precision={2}
               prefix="¥"
-              valueStyle={{ color: '#ff4d4f', fontWeight: 'bold' }}
+              valueStyle={{ color: '#ff6270', fontWeight: 800, fontFamily: 'Courier New, monospace' }}
               loading={loading}
             />
-          </Col>
-          <Col span={6} style={{ borderLeft: '1px solid #f0f0f0' }}>
+          </Card>
+        </Col>
+
+        {/* 本月结余 */}
+        <Col xs={24} md={6}>
+          <Card
+            className="nailong-card"
+            style={{
+              borderRadius: 16,
+              background: 'linear-gradient(135deg, #ffffff, #fff7e6)',
+              borderColor: '#ffd591',
+            }}
+          >
             <Statistic
-              title="本月结余"
+              title={
+                <span style={{ color: '#ff9829', fontWeight: 600 }}>
+                  <AccountBookOutlined /> 本月结余
+                </span>
+              }
               value={Math.abs(balance)}
               precision={2}
               prefix={balance >= 0 ? '¥' : '-¥'}
               valueStyle={{
-                color: balance >= 0 ? '#ff7a45' : '#8c8c8c',
-                fontWeight: 'bold',
+                color: balance >= 0 ? '#ff9829' : '#88746a',
+                fontWeight: 800,
+                fontFamily: 'Courier New, monospace',
               }}
               loading={loading}
             />
-          </Col>
-        </Row>
-      </Card>
+          </Card>
+        </Col>
+      </Row>
 
       {loading ? (
-        <Card style={{ borderRadius: 12, textAlign: 'center', padding: 40 }}>
+        <Card style={{ borderRadius: 16, textAlign: 'center', padding: 40 }} className="nailong-card">
           <Spin size="large" />
         </Card>
       ) : !hasAnyData ? (
-        <Card style={{ borderRadius: 12 }}>
-          <Empty description="本月暂无记账数据哦 📝" />
+        <Card style={{ borderRadius: 16 }} className="nailong-card">
+          <Empty description="本月暂无记账数据，快去记一笔吧 📝" />
         </Card>
       ) : (
-        <Row gutter={16}>
-          {/* 左侧：分类占比分析饼图 */}
-          <Col span={12}>
+        <Row gutter={[16, 16]}>
+          {/* 左侧：分类占比分析饼图（环形图） */}
+          <Col xs={24} lg={12}>
             <Card
-              title="分类占比分析"
-              style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+              title={
+                <span style={{ fontWeight: 700, color: '#4a362f' }}>
+                  📊 分类占比分析
+                </span>
+              }
+              className="nailong-card"
+              style={{ borderRadius: 16 }}
               extra={
                 <Segmented
                   options={[
-                    { label: '支出分析', value: 'expense' },
-                    { label: '收入分析', value: 'income' },
+                    { label: '支出占比', value: 'expense' },
+                    { label: '收入占比', value: 'income' },
                   ]}
                   value={analysisType}
                   onChange={(val) => setAnalysisType(val as 'expense' | 'income')}
                   size="small"
+                  style={{ borderRadius: 8 }}
                 />
               }
             >
               {hasPieData ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={85}
-                      dataKey="value"
-                      label={({ name, percent }) =>
-                        `${name.split(' ')[1]} ${(percent * 100).toFixed(0)}%`
-                      }
-                      labelLine={true}
-                    >
-                      {pieData.map((_, index) => (
-                        <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value: any) => [`¥${Number(value).toFixed(2)}`, '总额']}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div style={{ position: 'relative' }}>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60} // 改造为 Donut 环形图，腾出留白更清爽
+                        outerRadius={95}
+                        dataKey="value"
+                        label={renderCustomizedLabel}
+                        labelLine={false}
+                      >
+                        {pieData.map((_, index) => (
+                          <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomPieTooltip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {/* Donut 中部提示 */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      textAlign: 'center',
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    <div style={{ fontSize: 12, color: '#88746a', fontWeight: 500 }}>
+                      {analysisType === 'expense' ? '支出总额' : '收入总额'}
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: '#4a362f', marginTop: 2 }}>
+                      ¥
+                      {(analysisType === 'expense' ? stats?.monthExpense : stats?.monthIncome)?.toFixed(0)}
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Empty description={analysisType === 'expense' ? '本月暂无支出占比数据' : '本月暂无收入占比数据'} />
@@ -200,42 +362,57 @@ const Statistics: React.FC = () => {
           </Col>
 
           {/* 右侧：每日收支对比趋势图 */}
-          <Col span={12}>
-            <Card title="每日收支趋势对比" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+          <Col xs={24} lg={12}>
+            <Card
+              title={
+                <span style={{ fontWeight: 700, color: '#4a362f' }}>
+                  📈 每日收支对比趋势
+                </span>
+              }
+              className="nailong-card"
+              style={{ borderRadius: 16 }}
+            >
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={barData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `¥${v}`} />
+                <BarChart data={barData} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#fff2e6" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#88746a', fontWeight: 500 }} />
+                  <YAxis tick={{ fontSize: 11, fill: '#88746a', fontWeight: 500 }} tickFormatter={(v) => `¥${v}`} />
                   <Tooltip content={<CustomBarTooltip />} />
                   <Legend wrapperStyle={{ fontSize: 12, paddingTop: 10 }} />
-                  {/* 支出柱子 (橙色) 🆚 收入柱子 (绿色) */}
-                  <Bar dataKey="收入 (元)" fill="#52c41a" radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="支出 (元)" fill="#ff7a45" radius={[3, 3, 0, 0]} />
+                  {/* 支出柱子 (莓粉) 🆚 收入柱子 (嫩绿) */}
+                  <Bar dataKey="收入 (元)" fill="#6ed13d" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="支出 (元)" fill="#ff6270" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </Card>
           </Col>
 
           {/* 下方：当前类型下的分类排行榜 */}
-          <Col span={24} style={{ marginTop: 16 }}>
+          <Col span={24}>
             <Card
-              title={analysisType === 'expense' ? '🏆 支出排行榜' : '🏆 收入排行榜'}
-              style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+              title={
+                <span style={{ fontWeight: 700, color: '#4a362f' }}>
+                  {analysisType === 'expense' ? '🏆 支出排行榜' : '🏆 收入排行榜'}
+                </span>
+              }
+              className="nailong-card"
+              style={{ borderRadius: 16 }}
             >
               {hasPieData ? (
                 <List
                   dataSource={currentCategoryStats}
                   renderItem={(item, index) => {
                     const totalMonthAmount = analysisType === 'expense' ? (stats?.monthExpense ?? 1) : (stats?.monthIncome ?? 1)
+                    const percent = totalMonthAmount > 0 ? (item.total / totalMonthAmount) * 100 : 0
                     return (
                       <List.Item
                         extra={
                           <span
                             style={{
-                              color: analysisType === 'income' ? '#52c41a' : '#ff4d4f',
-                              fontWeight: 'bold',
+                              color: analysisType === 'income' ? '#6ed13d' : '#ff6270',
+                              fontWeight: 800,
                               fontSize: 16,
+                              fontFamily: 'Courier New, monospace',
                             }}
                           >
                             ¥{item.total.toFixed(2)}
@@ -243,19 +420,28 @@ const Statistics: React.FC = () => {
                         }
                       >
                         <List.Item.Meta
-                          avatar={
-                            <Avatar
-                              style={{
-                                background: index < 3 ? (analysisType === 'income' ? '#52c41a' : '#ff7a45') : '#d9d9d9',
-                                color: '#fff',
-                                fontWeight: 'bold',
-                              }}
-                            >
-                              {index + 1}
-                            </Avatar>
+                          avatar={getRankBadge(index)}
+                          title={
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 400 }}>
+                              <span style={{ fontWeight: 700, color: '#4a362f' }}>
+                                {item.icon} {item.name}
+                              </span>
+                              <span style={{ fontSize: 12, color: '#88746a', fontWeight: 500 }}>
+                                占比 {percent.toFixed(1)}%
+                              </span>
+                            </div>
                           }
-                          title={`${item.icon} ${item.name}`}
-                          description={`占比 ${(totalMonthAmount > 0 ? (item.total / totalMonthAmount) * 100 : 0).toFixed(1)}%`}
+                          description={
+                            <div style={{ marginTop: 6, maxWidth: 400 }}>
+                              <Progress
+                                percent={parseFloat(percent.toFixed(1))}
+                                strokeColor={analysisType === 'income' ? '#6ed13d' : '#ff9829'}
+                                trailColor="#fff2e6"
+                                showInfo={false}
+                                strokeWidth={8}
+                              />
+                            </div>
+                          }
                         />
                       </List.Item>
                     )

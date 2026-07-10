@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Layout, Menu } from 'antd'
 import {
@@ -6,6 +6,7 @@ import {
   UnorderedListOutlined,
   PieChartOutlined,
   AppstoreOutlined,
+  SettingOutlined,
 } from '@ant-design/icons'
 
 const { Sider, Content, Header } = Layout
@@ -16,6 +17,7 @@ const menuItems = [
   { key: '/records', icon: <UnorderedListOutlined />, label: '账单列表' },
   { key: '/statistics', icon: <PieChartOutlined />, label: '月度统计' },
   { key: '/categories', icon: <AppstoreOutlined />, label: '分类管理' },
+  { key: '/settings', icon: <SettingOutlined />, label: '系统设置' },
 ]
 
 interface AppLayoutProps {
@@ -26,30 +28,54 @@ interface AppLayoutProps {
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const navigate = useNavigate()
   const location = useLocation()
+  const [greeting, setGreeting] = useState('你好呀')
+
+  // 根据当前时间设置温馨的动态问候语
+  useEffect(() => {
+    const hour = new Date().getHours()
+    if (hour < 5) {
+      setGreeting('夜猫子时间，注意休息哦 😴')
+    } else if (hour < 9) {
+      setGreeting('早上好！一日之计在于晨 🌅')
+    } else if (hour < 12) {
+      setGreeting('上午好！今天又是元气满满的一天 🥤')
+    } else if (hour < 14) {
+      setGreeting('中午好！吃个美味的午餐吧 🍔')
+    } else if (hour < 18) {
+      setGreeting('下午好！来杯下午茶放松一下 ☕')
+    } else if (hour < 22) {
+      setGreeting('晚上好！来记录一下今天的收获吧 📝')
+    } else {
+      setGreeting('深夜啦，准备洗漱入睡吧 💤')
+    }
+  }, [location.pathname]) // 路由切换时重新判断时间问候
 
   return (
     <Layout style={{ height: '100vh' }}>
       {/* 左侧导航栏 */}
       <Sider
         theme="light"
-        width={180}
+        width={190}
         style={{
-          borderRight: '1px solid #f0f0f0',
-          boxShadow: '2px 0 8px rgba(0,0,0,0.06)',
+          borderRight: '2px dashed #ffe8cc',
+          boxShadow: '4px 0 16px rgba(255, 152, 41, 0.03)',
+          background: '#fffdfa',
         }}
       >
         {/* 应用标题 */}
         <div
           style={{
-            height: 64,
+            height: 72,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderBottom: '1px solid #f0f0f0',
+            borderBottom: '2px dashed #ffe8cc',
+            margin: '0 12px',
           }}
+          className="animate-wiggle"
         >
-          <span style={{ fontSize: 24, marginRight: 8 }}>🐲</span>
-          <span style={{ fontSize: 18, fontWeight: 'bold', color: '#ff7a45' }}>
+          <span style={{ fontSize: 26, marginRight: 6 }}>🐉</span>
+          <span style={{ fontSize: 19, fontWeight: 800, color: '#ff9829', letterSpacing: '0.5px' }}>
             奶龙记账
           </span>
         </div>
@@ -59,7 +85,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           selectedKeys={[location.pathname]}
           items={menuItems}
           onClick={({ key }) => navigate(key)}
-          style={{ borderRight: 'none', marginTop: 8 }}
+          style={{ borderRight: 'none', marginTop: 16, padding: '0 8px' }}
         />
       </Sider>
 
@@ -67,26 +93,38 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       <Layout>
         <Header
           style={{
-            background: '#fff',
+            background: '#fffdfa',
             padding: '0 24px',
-            height: 64,
-            lineHeight: '64px',
-            borderBottom: '1px solid #f0f0f0',
+            height: 72,
+            lineHeight: '72px',
+            borderBottom: '2px dashed #ffe8cc',
             fontSize: 16,
-            fontWeight: 500,
+            fontWeight: 700,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            color: '#4a362f',
           }}
         >
-          {/* 根据当前路由显示页面标题 */}
-          {menuItems.find((item) => item.key === location.pathname)?.label || '奶龙记账'}
+          {/* 左侧标题 */}
+          <span>
+            {menuItems.find((item) => item.key === location.pathname)?.label || '奶龙记账'}
+          </span>
+          {/* 右侧动态温暖问候语 */}
+          <span style={{ fontSize: 13, color: '#ff9829', fontWeight: 500, opacity: 0.9 }}>
+            {greeting}
+          </span>
         </Header>
         <Content
           style={{
             padding: 24,
             overflow: 'auto',
-            background: '#f5f5f5',
+            background: '#fdf9f4',
           }}
         >
-          {children}
+          <div className="animate-fade-in" style={{ height: '100%' }}>
+            {children}
+          </div>
         </Content>
       </Layout>
     </Layout>

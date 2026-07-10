@@ -28,4 +28,9 @@ contextBridge.exposeInMainWorld('api', {
 
   getMonthlyStats: (year: number, month: number) =>
     ipcRenderer.invoke('get-monthly-stats', year, month),
+
+  exportToCsv: () => ipcRenderer.invoke('export-to-csv'),
+  importFromCsv: () => ipcRenderer.invoke('import-from-csv'),
+  clearAllRecords: () => ipcRenderer.invoke('clear-all-records'),
+  factoryResetDb: () => ipcRenderer.invoke('factory-reset-db'),
 })
