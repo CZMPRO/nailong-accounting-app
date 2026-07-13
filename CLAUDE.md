@@ -139,6 +139,36 @@ bookkeeping/
 
 ---
 
+## Git 提交门禁
+
+### Claude Code 官方钩子位置（项目级）
+
+按 Claude Code 文档，项目钩子配置在 **`.claude/settings.json`** 的 **`hooks`** 字段；可执行脚本放在 **`.claude/hooks/`**。
+
+| 路径 | 作用 |
+|------|------|
+| [`.claude/settings.json`](.claude/settings.json) | 注册 `PreToolUse` / `PostToolUse`（matcher: `Bash`） |
+| [`.claude/hooks/check-pass-gate.js`](.claude/hooks/check-pass-gate.js) | 校验双通行证 |
+| [`.claude/hooks/clear-pass-gate.js`](.claude/hooks/clear-pass-gate.js) | push 后删除通行证 |
+| [`.claude/hooks/claude-pre-bash-commit-gate.js`](.claude/hooks/claude-pre-bash-commit-gate.js) | Claude 执行 `git commit` 前拦截 |
+| [`.claude/hooks/claude-post-bash-push-clear.js`](.claude/hooks/claude-post-bash-push-clear.js) | Claude 执行 `git push` 后清章 |
+
+说明：用户级配置还可写在 `~/.claude/settings.json`；本仓库只用**项目级**，便于进 Git 共享。
+
+**本仓库不使用 Git 原生 hooks（无 `.githooks/`）：** 仅拦截 **Claude Code** 通过 Bash 发起的 `git commit` / `git push`。在系统终端或其它 GUI 里直接 `git commit` **不会**走此门禁。
+
+### 通行证规则
+
+1. 必须存在且有效（`status: passed`，`at` 在 5 分钟内）：
+   - `.claude/states/tester-pass.json` — 由 **`tester`** 在单元测试全绿后写入
+   - `.claude/states/quality-pass.json` — 由 **`quality-engineer`** 在质检通过后写入（安全无严重/高即可；注释黄灯可过）
+2. Claude 内提交缺少或过期通行证 → **拒绝**；禁止使用 `--no-verify` 绕过。
+3. **Claude 内 `git push` 成功后**删除两张通行证（PostToolUse + `gitcommit-agent`）。
+4. 一键入口：子代理 **`gitcommit-agent`**。
+5. **`/git-save` 仍是纯存档**；`.claude/states/` 已被 gitignore。
+
+---
+
 ## 后续扩展方向（非 MVP，记录备用）
 
 - 自定义分类（用户可增删改分类）
